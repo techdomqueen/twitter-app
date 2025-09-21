@@ -1,6 +1,8 @@
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
+const RedisStore = require('connect-redis').default;
+const redis = require('redis');
 const { TwitterApi } = require('twitter-api-v2');
 const crypto = require('crypto');
 
@@ -8,10 +10,16 @@ const app = express();
 const port = process.env.PORT || 3000;
 const apiKey = process.env.TWITTER_API_KEY;
 const apiSecret = process.env.TWITTER_API_SECRET;
-const callbackUrl = process.env.CALLBACK_URL || 'https://twitter-94tpfkywx-techdomqueens-projects.vercel.app/callback';
+const callbackUrl = process.env.CALLBACK_URL || 'https://sadist-chloe.vercel.app/callback';
 
+// Initialize Redis client
+const redisClient = redis.createClient({ url: process.env.REDIS_URL });
+redisClient.connect().catch(console.error);
+
+// Set up session middleware with Redis
 app.use(
   session({
+    store: new RedisStore({ client: redisClient }),
     secret: process.env.SESSION_SECRET || '7a9b3c8d2f6e1h4i9j0k5l2m8n3p7q',
     resave: false,
     saveUninitialized: true,
