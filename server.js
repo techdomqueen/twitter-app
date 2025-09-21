@@ -8,7 +8,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 const apiKey = process.env.TWITTER_API_KEY;
 const apiSecret = process.env.TWITTER_API_SECRET;
-const callbackUrl = process.env.CALLBACK_URL || 'https://sadistchloe-gc826489v-techdomqueens-projects.vercel.app/callback';
+const callbackUrl = process.env.CALLBACK_URL || 'https://twitter-94tpfkywx-techdomqueens-projects.vercel.app/callback';
 
 app.use(
   session({
