@@ -5,43 +5,37 @@ const { TwitterApi } = require('twitter-api-v2');
 const crypto = require('crypto');
 
 const app = express();
-const port = process.env.PORT || 3000; // Use Vercel's PORT or fallback to 3000
+const port = process.env.PORT || 3000;
 const apiKey = process.env.TWITTER_API_KEY;
 const apiSecret = process.env.TWITTER_API_SECRET;
-const callbackUrl = process.env.CALLBACK_URL || 'https://your-project-name.vercel.app/callback';
+const callbackUrl = process.env.CALLBACK_URL || 'https://sadistchloe-gc826489v-techdomqueens-projects.vercel.app/callback';
 
-// Set up session middleware
 app.use(
   session({
     secret: process.env.SESSION_SECRET || '7a9b3c8d2f6e1h4i9j0k5l2m8n3p7q',
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: true, maxAge: 24 * 60 * 60 * 1000 }, // Secure for HTTPS
+    cookie: { secure: true, maxAge: 24 * 60 * 60 * 1000 },
   })
 );
 
-// Initialize Twitter client for OAuth 1.0a
 const client = new TwitterApi({
   appKey: apiKey,
   appSecret: apiSecret,
 });
 
-// Homepage with button
 app.get('/', async (req, res) => {
   try {
-    // Generate OAuth 1.0a request token and secret
     const { oauth_token, oauth_token_secret, url } = await client.generateAuthLink(callbackUrl, {
       authAccessType: 'write',
     });
 
-    // Store in session
     req.session.oauthTokenSecret = oauth_token_secret;
     req.session.oauthToken = oauth_token;
     req.session.save((err) => {
       if (err) console.error('Session save error:', err);
     });
 
-    // Log for debugging
     console.log('Generated auth link:', {
       sessionId: req.sessionID,
       oauth_token,
@@ -64,13 +58,11 @@ app.get('/', async (req, res) => {
   }
 });
 
-// OAuth callback
 app.get('/callback', async (req, res) => {
   const { oauth_token, oauth_verifier } = req.query;
   const oauthTokenSecret = req.session?.oauthTokenSecret;
   const storedOauthToken = req.session?.oauthToken;
 
-  // Debug log
   console.log('Callback received:', {
     sessionId: req.sessionID,
     oauth_token: oauth_token || 'missing',
@@ -95,29 +87,24 @@ app.get('/callback', async (req, res) => {
   }
 
   try {
-    // Log token exchange attempt
     console.log('Attempting token exchange with:', {
       oauth_token: oauth_token || 'missing',
       oauth_verifier: oauth_verifier || 'missing',
       oauthTokenSecret: oauthTokenSecret || 'missing',
     });
 
-    // Exchange request token for access token
     const userClient = await client.login(oauth_verifier, {
       oauth_token,
       oauth_token_secret: oauthTokenSecret,
     });
 
-    // Log access token
     console.log('Access token obtained:', {
       accessToken: userClient.accessToken,
       accessSecret: userClient.accessSecret,
     });
 
-    // Post tweet
     const tweet = await userClient.v2.tweet('hi');
 
-    // Clear session
     req.session.destroy((err) => {
       if (err) console.error('Session destroy error:', err);
     });
